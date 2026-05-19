@@ -355,27 +355,26 @@ def betterEvaluationFunction(currentGameState: GameState):
     capsules    = currentGameState.getCapsules()
     score       = currentGameState.getScore()
 
-    # ── Food ────────────────────────────────────────────────
+    #Food
     if foodList:
         minFoodDist = min(manhattanDistance(pos, f) for f in foodList)
-        score += 10.0 / minFoodDist          # closer food → higher score
-    score -= 4.0 * len(foodList)             # fewer pellets remaining is better
+        score += 10.0 / minFoodDist 
+        score -= 4.0 * len(foodList) 
 
-    # ── Ghosts ──────────────────────────────────────────────
+    #Ghosts
     for ghost in ghostStates:
         dist = manhattanDistance(pos, ghost.getPosition())
         if ghost.scaredTimer > 0:
-            # Ghost is scared – chase it
             score += 200.0 / (dist + 1)
         else:
             # Ghost is dangerous
             if dist <= 1:
-                score -= 500          # immediate danger
+                score -= 500
             else:
-                score -= 2.0 / dist   # mild repulsion
+                score -= 2.0 / dist 
 
-    # ── Capsules ────────────────────────────────────────────
-    score -= 20.0 * len(capsules)     # prefer states where capsules are eaten
+    #Capsules
+    score -= 20.0 * len(capsules) 
 
     return score
 
