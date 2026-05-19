@@ -149,7 +149,7 @@ class PrioritizedSweepingValueIterationAgent(ValueIterationAgent):
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
         
-        # --- BƯỚC 1: Tìm các trạng thái liền trước (predecessors) ---
+      
         predecessors = {}
         for state in self.mdp.getStates():
             if not self.mdp.isTerminal(state):
@@ -160,44 +160,44 @@ class PrioritizedSweepingValueIterationAgent(ValueIterationAgent):
                                 predecessors[nextState] = set()
                             predecessors[nextState].add(state)
         
-        # --- BƯỚC 2: Khởi tạo Hàng đợi ưu tiên rỗng ---
+      
         pq = util.PriorityQueue()
 
-        # --- BƯỚC 3: Tính toán độ lệch (diff) ban đầu ---
+        
         for state in self.mdp.getStates():
             if not self.mdp.isTerminal(state):
-                # Tận dụng hàm của bạn: Tìm action tốt nhất, sau đó tính Q-value cho action đó
+              
                 best_action = self.computeActionFromValues(state)
                 max_q_value = self.computeQValueFromValues(state, best_action)
                 
-                # Tính sai số
+               
                 diff = abs(self.values[state] - max_q_value)
                 pq.push(state, -diff)
 
-        # --- BƯỚC 4: Vòng lặp ưu tiên (Prioritized Sweeping) ---
+       
         for iteration in range(self.iterations):
             if pq.isEmpty():
                 break
             
-            # Lấy ô có sai số lớn nhất ra
+            
             state = pq.pop()
             
-            # Cập nhật lại giá trị mới
+          
             if not self.mdp.isTerminal(state):
                 best_action = self.computeActionFromValues(state)
                 max_q_value = self.computeQValueFromValues(state, best_action)
                 self.values[state] = max_q_value
                 
-            # Đánh động các ô liền trước (predecessors)
+            
             for p in predecessors.get(state, []):
                 if not self.mdp.isTerminal(p):
-                    # Tận dụng hàm của bạn cho các ô hàng xóm
+                   
                     best_action_p = self.computeActionFromValues(p)
                     max_q_value_p = self.computeQValueFromValues(p, best_action_p)
                     
                     diff_p = abs(self.values[p] - max_q_value_p)
                     
-                    # Nếu chênh lệch > ngưỡng theta, đẩy lại vào hàng đợi
+                
                     if diff_p > self.theta:
                         pq.update(p, -diff_p)
 

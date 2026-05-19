@@ -120,33 +120,28 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
        
         def value(state, depth, agentIndex):
-            #diều kiện dừng
+
             if depth == self.depth or state.isWin() or state.isLose():
-                # Trả về điểm số của trạng thái đó, hành động để chuỗi rỗng
                 return self.evaluationFunction(state), ""
 
-            #đến lượt Pacman đi cần Maximize
+          
             if agentIndex == 0:
                 return maxValue(state, depth)
             
-            #đến lượt của Ma (Ghost) cần Minimize
+            
             else:
                 return minValue(state, depth, agentIndex)
 
 
-        # ==========================================================
-        # HÀM CỦA PACMAN 
-        # ==========================================================
+        
         def maxValue(state, depth):
             v = float("-inf") 
             bestAction = ""
-            actions = state.getLegalActions(0) # Lấy các bước đi hợp lệ của Pacman
+            actions = state.getLegalActions(0) 
             
             for action in actions:
-                # tạo ra bàn cờ tương lai nếu đi bước này
-                successor = state.generateSuccessor(0, action)
                 
-                # Tính xem nếu Pacman đi bước này thì sau đó ma (ID = 1) sẽ đi thế nào.
+                successor = state.generateSuccessor(0, action)
                 newV, _ = value(successor, depth, 1)
                 if newV > v:
                     v, bestAction = newV, action
@@ -154,38 +149,31 @@ class MinimaxAgent(MultiAgentSearchAgent):
             return v, bestAction
 
 
-        # ==========================================================
-        # HÀM CỦA MA 
-        # ==========================================================
+        
         def minValue(state, depth, agentIndex):
             v = float("inf")
             bestAction = ""
-            actions = state.getLegalActions(agentIndex) # Lấy các bước đi hợp lệ của con ma hiện tại
+            actions = state.getLegalActions(agentIndex) 
             numAgents = state.getNumAgents() 
             
             for action in actions:
-                # Tạo bàn cờ tương lai nếu con ma này đi bước 'action'
+                
                 successor = state.generateSuccessor(agentIndex, action)
                 
-                # KIỂM TRA CHUYỂN LƯỢT:
-                # Nếu đây là con ma cuối cùng trên bản đồ (ID lớn nhất)
+                
                 if agentIndex == numAgents - 1:
-                    # Lượt tiếp theo sẽ quay lại Pacman (0) VÀ phải tăng độ sâu (depth + 1)
+                    
                     newV, _ = value(successor, depth + 1, 0)
                 else:
-                    # Nếu vẫn còn ma chưa đi, thì gọi con ma tiếp theo (agentIndex + 1), độ sâu giữ nguyên
+                   
                     newV, _ = value(successor, depth, agentIndex + 1)
                 
-                # Cập nhật kỷ lục nếu tìm thấy đường đi dìm điểm xuống thấp hơn
+                
                 if newV < v:
                     v, bestAction = newV, action
                     
             return v, bestAction
-
-
-        # ==========================================================
-        # GỌI HÀM ĐỂ BẮT ĐẦU CHẠY THUẬT TOÁN
-        # ==========================================================
+        
         _, action = value(gameState, 0, 0)
         
         return action
