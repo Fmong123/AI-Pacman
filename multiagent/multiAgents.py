@@ -276,15 +276,61 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     Your expectimax agent (question 4)
     """
 
-    def getAction(self, gameState: GameState):
+    def getAction(self, gameState):
         """
         Returns the expectimax action using self.depth and self.evaluationFunction
 
         All ghosts should be modeled as choosing uniformly at random from their
         legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        def expectimax(state, depth, agentIndex):
+            """
+            Recursive expectimax function.
+            - agentIndex == 0  → Pacman (MAX node)
+            - agentIndex >= 1  → Ghost  (CHANCE / expectation node)
+            depth counts full plies; decremented only when we wrap back to Pacman (agent 0).
+            """
+            # Terminal test: game over OR reached depth limit
+            if state.isWin() or state.isLose() or depth == 0:
+                return self.evaluationFunction(state)
+
+            numAgents   = state.getNumAgents()
+            legalActions = state.getLegalActions(agentIndex)
+
+            # Determine next agent and whether depth should decrease
+            nextAgent = (agentIndex + 1) % numAgents
+            nextDepth = depth - 1 if nextAgent == 0 else depth
+
+            successors = [
+                state.generateSuccessor(agentIndex, action)
+                for action in legalActions
+            ]
+
+            if agentIndex == 0:
+                # MAX node – Pacman picks the best move
+                return max(
+                    expectimax(succ, nextDepth, nextAgent)
+                    for succ in successors
+                )
+            else:
+                # CHANCE node – ghost moves uniformly at random
+                return sum(
+                    expectimax(succ, nextDepth, nextAgent)
+                    for succ in successors
+                ) / len(successors)
+
+        # Root call: choose the action that maximises the expectimax value
+        legalActions = gameState.getLegalActions(0)
+        bestAction   = max(
+            legalActions,
+            key=lambda action: expectimax(
+                gameState.generateSuccessor(0, action),
+                self.depth,
+                1   # first ghost index
+            )
+        )
+        return bestAction
 
 
 def betterEvaluationFunction(currentGameState: GameState):
@@ -295,7 +341,43 @@ def betterEvaluationFunction(currentGameState: GameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import manhattanDistance
+
+    # Hard wins / losses
+    if currentGameState.isWin():
+        return float('inf')
+    if currentGameState.isLose():
+        return float('-inf')
+
+    pos         = currentGameState.getPacmanPosition()
+    foodList    = currentGameState.getFood().asList()
+    ghostStates = currentGameState.getGhostStates()
+    capsules    = currentGameState.getCapsules()
+    score       = currentGameState.getScore()
+
+    # ── Food ────────────────────────────────────────────────
+    if foodList:
+        minFoodDist = min(manhattanDistance(pos, f) for f in foodList)
+        score += 10.0 / minFoodDist          # closer food → higher score
+    score -= 4.0 * len(foodList)             # fewer pellets remaining is better
+
+    # ── Ghosts ──────────────────────────────────────────────
+    for ghost in ghostStates:
+        dist = manhattanDistance(pos, ghost.getPosition())
+        if ghost.scaredTimer > 0:
+            # Ghost is scared – chase it
+            score += 200.0 / (dist + 1)
+        else:
+            # Ghost is dangerous
+            if dist <= 1:
+                score -= 500          # immediate danger
+            else:
+                score -= 2.0 / dist   # mild repulsion
+
+    # ── Capsules ────────────────────────────────────────────
+    score -= 20.0 * len(capsules)     # prefer states where capsules are eaten
+
+    return score
 
 
 # Abbreviation
